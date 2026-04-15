@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button"
-import type { Product } from "@/mocks/products.mock"
 import { Filter, Grid, List } from "lucide-react"
 import { ProductCard } from "./ProductCard"
 import { FilterSidebar } from "./FilterSidebar";
 import { useSearchParams } from "react-router";
 import { useState } from "react";
+import type { Product } from "@/interfaces/product.interface";
 
 interface Props {
     products: Product[];
@@ -12,15 +12,14 @@ interface Props {
 
 export const ProductsGrid = ({ products }: Props) => {
 
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [showFilters, setShowFilters] = useState(false);
-
-    const [serachParams, setSearchParams] = useSearchParams();
-
-    const viewMode = serachParams.get('viewMode') || 'grid';
+    const viewMode = searchParams.get('viewMode') || 'grid';
 
     const handleViewModeChange = (mode: 'grid' | 'list') => {
-        serachParams.set('viewMode', mode);
-        setSearchParams(serachParams);
+        searchParams.set('viewMode', mode);
+        setSearchParams(searchParams);
     }
 
     return (
@@ -89,19 +88,16 @@ export const ProductsGrid = ({ products }: Props) => {
 
                     {/* Products Grid */}
                     <div className="flex-1">
-                        <div className={
-                            viewMode === 'grid'
-                                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-                                : "space-y-4"
-                        }>
+                        <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
                             {products.map((product) => (
                                 <ProductCard
                                     key={product.id}
                                     id={product.id}
-                                    name={product.name}
+                                    name={product.title}
                                     price={product.price}
-                                    image={product.image}
-                                    category={product.category}
+                                    image={product.images[0]} // Asumiendo que siempre hay al menos una imagen
+                                    category={product.gender}
+                                    sizes={product.sizes}
                                 />
                             ))}
                         </div>
