@@ -1,8 +1,9 @@
+import { useAuthStore } from "@/auth/store/auth.store";
 import { CustomLogo } from "@/components/custom/CustomLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Menu, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useRef } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 
@@ -12,6 +13,8 @@ export const CustomHeader = () => {
     // const [cartCount] = useState(3);
 
     const [searchParams, setSearchParams] = useSearchParams();
+
+    const { authStatus, isAdmin, logout } = useAuthStore();
 
     const { gender } = useParams();
 
@@ -79,17 +82,36 @@ export const CustomHeader = () => {
                         <Search className="h-5 w-5" />
                     </Button>
 
-                    <Link to="/auth/login">
-                        <Button variant='default' size="sm" className="ml-2">
-                            Login
-                        </Button>
-                    </Link>
 
-                    <Link to="/auth/admin">
-                        <Button variant='destructive' size="sm" className="ml-2">
-                            Admin
-                        </Button>
-                    </Link>
+                    {/* si usuario esta conectado   */}
+                    {
+                        authStatus === 'not-authenticated' ? (
+                            <Link to="/auth/login">
+                                <Button variant='default' size="sm" className="ml-2">
+                                    Login
+                                </Button>
+                            </Link>
+                        ) : (
+
+                            <Button variant='outline' size="sm" className="ml-2" onClick={logout}>
+                                Cerrar sesion
+                            </Button>
+
+                        )
+
+                    }
+
+                    {
+                        isAdmin() && (
+
+                            <Link to="/admin">
+                                <Button variant='destructive' size="sm" className="ml-2">
+                                    Admin
+                                </Button>
+                            </Link>
+                        )
+                    }
+
                     {/* <Button variant="ghost" size="icon" className="relative">
                         <ShoppingBag className="h-5 w-5" />
                         {cartCount > 0 && <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
