@@ -2,7 +2,7 @@ import { AdminTitle } from '@/admin/components/AdminTitle';
 import { Button } from '@/components/ui/button';
 import type { Product, Size } from '@/interfaces/product.interface';
 import { X, SaveAll, Tag, Upload, Plus } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 
 import { useForm } from 'react-hook-form';
@@ -14,25 +14,36 @@ interface Props {
     product: Product;
     isPending: boolean;
 
-    onSubmit: (productLike: Partial<Product>) => Promise<void>;
+    onSubmit: (productLike: Partial<Product> & { files?: File[] }) => Promise<void>;
 }
 
 const availableSizes: Size[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+interface FormInputs extends Product {
+    files?: File[];
+}
 
 export const ProductForm = ({ title, subTitle, product, onSubmit, isPending }: Props) => {
 
     const [dragActive, setDragActive] = useState(false);
 
     //getValues hace las cosas sin renderizar, setValue hace las cosas renderizando, es decir, actualizando el estado del formulario para eso usamos watch para escuchar los cambios en el formulario y actualizar el estado del producto, pero como estamos usando react-hook-form, no necesitamos un estado separado para el producto, podemos usar watch para obtener los valores actuales del formulario y usarlos directamente en el renderizado.
-    const { register, handleSubmit, formState: { errors }, getValues, setValue, watch } = useForm({
+    const { register, handleSubmit, formState: { errors }, getValues, setValue, watch } = useForm<FormInputs>({
         defaultValues: product
     });
+
+    const labelInputRef = useRef<HTMLInputElement>(null);
+    const [files, setFiles] = useState<File[]>([]);
+
+    useEffect(() => {
+        // cuando el producto cambie, actualizamos los valores del formulario, esto es necesario para que cuando carguemos un producto diferente, el formulario se actualice con los nuevos valores, ya que react-hook-form no actualiza los valores del formulario automáticamente cuando cambian las props, por eso usamos setValue para actualizar los valores del formulario cada vez que el producto cambie.
+        setFiles([]);
+    }, [product]);
 
     const selectedSizes = watch('sizes');
     const selectedTags = watch('tags');
     const currentStock = watch('stock');
 
-    const labelInputRef = useRef<HTMLInputElement>(null);
 
     const addTag = () => {
         const newTagSet = new Set(getValues('tags'));
@@ -102,12 +113,18 @@ export const ProductForm = ({ title, subTitle, product, onSubmit, isPending }: P
         e.stopPropagation();
         setDragActive(false);
         const files = e.dataTransfer.files;
-        console.log(files);
+        if (!files) return;
+        setFiles((prev) => [...prev, ...Array.from(files)]);
+        const currentFiles = getValues('files') || [];
+        setValue('files', [...currentFiles, ...Array.from(files)]);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        console.log(files);
+        if (!files) return;
+        setFiles((prev) => [...prev, ...Array.from(files)]);
+        const currentFiles = getValues('files') || [];
+        setValue('files', [...currentFiles, ...Array.from(files)]);
     };
 
     return (
@@ -485,6 +502,35 @@ export const ProductForm = ({ title, subTitle, product, onSubmit, isPending }: P
                                                 </p>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+
+                                {/* Imagenes por cargar */}
+                                <div className={cn(
+                                    "mt-6 space-y-3",
+                                    {
+                                        'hidden': files.length === 0
+                                    }
+                                )}>
+                                    <h3 className="text-sm font-medium text-slate-700">
+                                        Imágenes por cargar
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {files.map((file, index) => (
+                                            <img
+                                                key={index}
+                                                src={URL.createObjectURL(file)}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover rounded-lg border border-slate-200"
+                                            />
+                                        ))}
+                                        {/* {
+                                            files.length === 0 && (
+                                                <p className="text-sm text-slate-500">
+                                                    No hay imágenes por cargar
+                                                </p>
+                                            )
+                                        } */}
                                     </div>
                                 </div>
                             </div>
